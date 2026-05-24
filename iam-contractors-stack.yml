@@ -1,0 +1,93 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: >
+  CloudFormation template to create IAM user,
+  Contractors IAM group and assign EC2, S3 and EKS access policies.
+
+Parameters:
+
+  IAMUserName:
+    Type: String
+    Default: contractor-user
+    Description: Name of IAM user to create
+
+  IAMGroupName:
+    Type: String
+    Default: Contractors
+    Description: Name of IAM group
+
+Resources:
+
+  ContractorsGroup:
+    Type: AWS::IAM::Group
+
+    Properties:
+      GroupName: !Ref IAMGroupName
+
+  ContractorsAccessPolicy:
+    Type: AWS::IAM::ManagedPolicy
+
+    Properties:
+      ManagedPolicyName: ContractorsAccessPolicy
+
+      Description: Policy providing EC2, S3 and EKS access for contractor users
+
+      PolicyDocument:
+        Version: '2012-10-17'
+
+        Statement:
+
+          - Sid: EC2Access
+            Effect: Allow
+
+            Action:
+              - ec2:Describe*
+              - ec2:StartInstances
+              - ec2:StopInstances
+
+            Resource: "*"
+
+          - Sid: S3Access
+            Effect: Allow
+
+            Action:
+              - s3:ListBucket
+              - s3:GetObject
+              - s3:PutObject
+
+            Resource: "*"
+
+          - Sid: EKSAccess
+            Effect: Allow
+
+            Action:
+              - eks:DescribeCluster
+              - eks:ListClusters
+
+            Resource: "*"
+
+      Groups:
+        - !Ref ContractorsGroup
+
+  ContractorUser:
+    Type: AWS::IAM::User
+
+    Properties:
+      UserName: !Ref IAMUserName
+
+      Groups:
+        - !Ref ContractorsGroup
+
+Outputs:
+
+  IAMUser:
+    Description: IAM User created
+    Value: !Ref ContractorUser
+
+  IAMGroup:
+    Description: IAM Group created
+    Value: !Ref ContractorsGroup
+
+  ManagedPolicy:
+    Description: Managed policy attached to group
+    Value: !Ref ContractorsAccessPolicy
